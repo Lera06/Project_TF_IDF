@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Django File Uploads</title>
+</head>
+<h2>Определение TF-IDF</h2>
+
+<body>
+    <form action="{% url 'home' %}" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" name="file" multiple>
+        <p><input type="submit" value="Загрузить" /></p>
+    </form><br>
+
+    {{ tf|safe }}<br>
+    {{ idf|safe }}<br>
+    {{ tf_idf|safe }}<br>
+</body>
+</html>
