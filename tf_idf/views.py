@@ -46,9 +46,9 @@ def upload_file(request):
     contex = {
         'form': form,
         'all_files': all_files,
-        'tf': get_tf(processed_corpus).to_html(),
-        'idf': get_idf(processed_corpus)[1].to_html(),
-        'tf_idf': get_tf_idf(processed_corpus).to_html(),
+        'tf': get_tf(processed_corpus)[0].head(50).to_html(),
+        'idf': get_idf(processed_corpus)[1].head(50).to_html(),
+        'tf_idf': get_tf_idf(processed_corpus).head(50).to_html(),
         }
 
     return render(request, 'tf_idf/upload.html', contex)
@@ -116,7 +116,10 @@ def get_tf(docs):
             value = df_tf.loc[i, [word]] + (1 / len(words))
             df_tf.loc[i, [word]] = value
 
-    return df_tf
+    df_tf_t = df_tf.copy()
+    df_tf_t = df_tf_t.T
+    # Возвращаем оригинал для последующих вычислений и копию для транспонирования
+    return df_tf_t, df_tf
 
 
 def get_idf(docs):
@@ -138,7 +141,8 @@ def get_idf(docs):
         idf[word] = np.log10(number_of_docs / count)
 
     df_idf = pd.DataFrame.from_dict([idf])
-    # df_idf = df_idf.T
+    # Сортируем по убыванию:
+    df_idf = df_idf.T.sort_values([0], ascending=False)
 
     return idf, df_idf
 
@@ -148,7 +152,7 @@ def get_tf_idf(docs):
 
     words_set = text_processing(docs)[0]
     number_of_docs = text_processing(docs)[1]
-    df_tf = get_tf(docs)
+    df_tf = get_tf(docs)[1]
     idf = get_idf(docs)[0]
     df_tf_idf = df_tf.copy()
 
@@ -157,6 +161,6 @@ def get_tf_idf(docs):
             value = df_tf.loc[i, [word]] * idf[word]
             df_tf_idf.loc[i, [word]] = value
 
-    # df_tf_idf = df_tf_idf.T
+    df_tf_idf = df_tf_idf.T
 
     return df_tf_idf
