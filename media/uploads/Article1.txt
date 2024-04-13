@@ -1,0 +1,1 @@
+Data Visualization is a big part of data analysis and data science. In a nutshell data visualization is a way to show complex data in a form that is graphical and easy to understand. This can be especially useful when trying to explore the data and get acquainted with it.  Visuals such as plots and graphs can be very effective in clearly explaining data to various audiences.

@@ -1,0 +1,1 @@
+A statement is a technical term that describes various parts of the Python language. You can think of a Python statement as a command or a calculation. This will become more clear as we take a look at examples of different kinds of Python statements.

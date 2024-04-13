@@ -11,10 +11,12 @@
         {% csrf_token %}
         <input type="file" name="file" multiple>
         <p><input type="submit" value="Загрузить" /></p>
-    </form><br>
+    </form>
+    <br>
+    <h2>TF</h2>{{ tf | safe }}<br><br>
+    <h2>IDF</h2>{{ idf | safe }}<br><br>
+    <h2>TF * IDF</h2>{{ tf_idf | safe }}<br>
 
-    {{ tf|safe }}<br>
-    {{ idf|safe }}<br>
-    {{ tf_idf|safe }}<br>
 </body>
+
 </html>
