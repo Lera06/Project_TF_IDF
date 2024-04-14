@@ -26,16 +26,16 @@ def upload_file(request):
 
         for file in request.FILES.getlist('file'):
             original_corpus.append(file.read().decode())
-
+        # print(original_corpus)
         for doc in original_corpus:
             corpus_no_punct.append(remove_punctuation(doc))
-
+        # print(corpus_no_punct)
         for doc in corpus_no_punct:
             corpus_lowercase.append(get_lowercase(doc))
-
+        # print(corpus_lowercase)
         for doc in corpus_lowercase:
             processed_corpus.append(remove_stop_words(doc))
-
+        # print(processed_corpus)
         if form.is_valid():
             files = request.FILES.getlist('file')
             for file in files:
@@ -46,17 +46,19 @@ def upload_file(request):
     contex = {
         'form': form,
         'all_files': all_files,
-        'tf': get_tf(processed_corpus)[0].head(50).to_html(),
-        'idf': get_idf(processed_corpus)[1].head(50).to_html(),
-        'tf_idf': get_tf_idf(processed_corpus).head(50).to_html(),
+        'dataframe': get_dataframe(processed_corpus).head(50).to_html(),
         }
 
     return render(request, 'tf_idf/upload.html', contex)
 
 
 # Вспомогательные методы для предварительной обработки документов:
-def remove_punctuation(sentence):
-    """Удаляет знаки пунктуации в предложении"""
+def remove_punctuation(sentence: str) -> str:
+    """
+      Удаляет пунктуацию из предложения:
+      :param sentence:
+      :return: отформатированную строку
+      """
     formatted_string = ''
     for chr in sentence:
         if chr not in string.punctuation:
@@ -65,8 +67,12 @@ def remove_punctuation(sentence):
     return formatted_string
 
 
-def get_lowercase(sentence):
-    """Переводит в нижний регистр"""
+def get_lowercase(sentence: str) -> str:
+    """
+    Переводит в нижний регистр каждый символ:
+    :param sentence:
+    :return: отформатированную строку
+    """
     formatted_lst = []
     for word in sentence.split(' '):
         formatted_lst.append(word.lower())
@@ -74,8 +80,12 @@ def get_lowercase(sentence):
     return ' '.join(formatted_lst)
 
 
-def remove_stop_words(doc):
-    """Удаляет стоп-слова"""
+def remove_stop_words(doc: str) -> str:
+    """
+    Удаляет стоп-слова:
+    :param doc:
+    :return: отформатированную строку
+    """
     stop_words = get_stop_words('english')
     filtered_words = []
 
@@ -86,8 +96,12 @@ def remove_stop_words(doc):
     return ' '.join(filtered_words)
 
 
-def text_processing(docs):
-    """Создает коллекцию из уникальных слов"""
+def text_processing(docs: list) -> tuple:
+    """
+    Создает множество из уникальных слов:
+    :param docs:
+    :return: кортеж из множества, числа документов и количества уникальных слов:
+    """
     # Определим коллекцию уникальных слов в уже предварительно обработанных документах:
     words_set = {word for doc in docs for word in doc.split(' ')}
 
@@ -100,8 +114,12 @@ def text_processing(docs):
 
 
 # Вычисления:
-def get_tf(docs):
-    """Определяет TF (частота слова в документе)"""
+def get_tf(docs: list) -> tuple:
+    """
+    Определяет TF (частоту слова в документе)
+    :param docs:
+    :return: кортеж из двух dataframes (транспонированной и оригинальной)
+    """
     words_set = text_processing(docs)[0]
     number_of_docs = text_processing(docs)[1]
     number_unique_words = text_processing(docs)[2]
@@ -118,12 +136,16 @@ def get_tf(docs):
 
     df_tf_t = df_tf.copy()
     df_tf_t = df_tf_t.T
-    # Возвращаем оригинал для последующих вычислений и копию для транспонирования
+    # Возвращаем копию (df_tf_t) для транспонирования и оригинал (df_tf) для последующих вычислений
     return df_tf_t, df_tf
 
 
-def get_idf(docs):
-    """Определяет IDF (обратная частота документа)"""
+def get_idf(docs: list) -> tuple:
+    """
+    Определяет IDF (обратную частоту документа):
+    :param docs:
+    :return: кортеж из словаря и dataframe, созданного из этого словаря
+    """
 
     words_set = text_processing(docs)[0]
     number_of_docs = text_processing(docs)[1]
@@ -141,14 +163,19 @@ def get_idf(docs):
         idf[word] = np.log10(number_of_docs / count)
 
     df_idf = pd.DataFrame.from_dict([idf])
-    # Сортируем по убыванию:
-    df_idf = df_idf.T.sort_values([0], ascending=False)
+    # Зададим новое имя для индекса, вместо нулевого значения:
+    df_idf = df_idf.rename(index={0: 'idf'})
+    df_idf = df_idf.T
 
     return idf, df_idf
 
 
-def get_tf_idf(docs):
-    """Определяет TF * IDF"""
+def get_tf_idf(docs: list):
+    """
+    Определяет TF * IDF:
+    :param docs:
+    :return: dataframe
+    """
 
     words_set = text_processing(docs)[0]
     number_of_docs = text_processing(docs)[1]
@@ -164,3 +191,26 @@ def get_tf_idf(docs):
     df_tf_idf = df_tf_idf.T
 
     return df_tf_idf
+
+
+def get_dataframe(docs: list):
+    """
+    Конкатенирует три dataframes, сортирует столбец idf по убыванию:
+    :param docs:
+    :return: dataframe со следующими столбцами:
+        tf: значение tf в n-м количестве документов
+        idf: значение idf по убыванию
+        tf*idf: n-ом количестве документов
+    """
+    df_tf = get_tf(docs)[0]
+    df_idf = get_idf(docs)[1]
+    df_tf_idf = get_tf_idf(docs)
+
+    # Объединяем все три dataframes по горизонтали:
+    dataframe = pd.concat([df_tf, df_idf, df_tf_idf], axis=1)
+
+    # Сортируем столбец idf по убыванию:
+    dataframe = dataframe.sort_values(['idf'], ascending=False)
+
+    return dataframe
+

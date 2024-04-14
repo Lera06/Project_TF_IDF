@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Django File Uploads</title>
 </head>
-<h2>Определение TF-IDF</h2>
+<h2>Определение TF___IDF___TF * IDF</h2>
 
 <body>
     <form action="{% url 'home' %}" method="post" enctype="multipart/form-data">
@@ -13,10 +13,7 @@
         <p><input type="submit" value="Загрузить" /></p>
     </form>
     <br>
-    <h2>TF</h2>{{ tf | safe }}<br><br>
-    <h2>IDF</h2>{{ idf | safe }}<br><br>
-    <h2>TF * IDF</h2>{{ tf_idf | safe }}<br>
-
+        {{ dataframe | safe }}
 </body>
 
 </html>
